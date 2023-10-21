@@ -17,6 +17,7 @@ pid_t pid;
  */
 void recv_ack_handler(int sig) {
   // TODO: code start
+  num_ack_received++;
   // TODO: code end
 }
 
@@ -29,7 +30,7 @@ void recv_ack_handler(int sig) {
  * @param sig
  */
 void terminate_handler(int sig) {
-  printf("receiver: received %d signals\n", num_signal_received);
+  printf("receiver: received %ld signals\n", num_signal_received);
   _exit(0);
 }
 
@@ -54,6 +55,14 @@ void terminate_handler(int sig) {
  */
 void sending_handler(int sig) {
   // TODO: code starts
+  if(num_signal_to_send==num_ack_received){
+	  printf("all signals have been sent!\n");
+	  kill(pid, SIGINT);
+	  sleep(1);
+	  exit(0);
+  }
+  printf("sender: total remaining signals(s): %ld\n",
+		  num_signal_to_send-num_ack_received);
   kill(pid, SIGUSR1);
 
   // TODO: code end
@@ -72,6 +81,10 @@ void sending_handler(int sig) {
  */
 void sending_ack(int sig) {
   // TODO: code start
+  num_signal_received++;
+
+  printf("receiver: received signal #%ld and sending ack\n", num_signal_received);
+  kill(pid, SIGUSR1);
   // TODO:code end
 }
 
@@ -104,8 +117,8 @@ int main(int argc, char *argv[]) {
     // signal  sending_handler signal handler (i.e. SIGALRM)
     signal(SIGALRM, sending_handler);
     // send back remaining signals after 1s if sender doesn't receive all acks
-    alarm(1);
-	    
+    if(num_signal_to_send>num_ack_received)
+    	alarm(1);	    
     // TODO: code end
     while (1)
       ;
